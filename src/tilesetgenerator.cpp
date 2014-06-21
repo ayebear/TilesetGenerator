@@ -2,31 +2,34 @@
 // See the file LICENSE.txt for copying conditions.
 
 #include "tilesetgenerator.h"
+#include <iostream>
 
 TilesetGenerator::TilesetGenerator(const std::string& filename):
-    configFilename(filename),
-    tilesetPos(0, 0)
+    config(filename, cfg::File::AllFlags)
 {
+    // Disable SFML error messages
+    sf::err().rdbuf(NULL);
 }
 
 bool TilesetGenerator::generate()
 {
     bool status = false;
-    readConfig();
-    setupImage();
-    for (unsigned imageNum = start; imageNum <= end; ++imageNum)
-        addImage(imageDirectory + std::to_string(imageNum) + "." + imageExtension);
-    saveTileset();
+    for (auto& section: config)
+    {
+        std::cout << "Generating " << section.first << "...\n";
+        config.useSection(section.first);
+        readConfig();
+        setupImage();
+        for (unsigned imageNum = start; imageNum <= end; ++imageNum)
+            addImage(imageDirectory + std::to_string(imageNum) + "." + imageExtension);
+        status = tilesetImage.saveToFile(section.first);
+    }
     return status;
 }
 
 void TilesetGenerator::readConfig()
 {
-    cfg::File config(configFilename, cfg::File::AllFlags);
-
     // Tilset settings
-    config.useSection("Tileset");
-    outputFilename = config("outputFilename");
     backgroundColor.setString(config("backgroundColor"));
     config("backgroundColor") = backgroundColor.toString();
     padding = sf::Vector2i(config("paddingX").toInt(), config("paddingY").toInt());
@@ -36,19 +39,19 @@ void TilesetGenerator::readConfig()
     applyAlpha = config("applyAlpha").toBool();
 
     // Image settings
-    config.useSection("Images");
-    imageExtension = config("extension");
-    imageDirectory = config("directory");
+    imageExtension = config("imageExtension");
+    imageDirectory = config("imageDirectory");
     if (!imageDirectory.empty() && imageDirectory.back() != '/')
         imageDirectory += '/';
-    start = config("start").toInt();
-    end = config("end").toInt();
+    start = config("imageStart").toInt();
+    end = config("imageEnd").toInt();
     //end = std::min(config("end").toInt(), tileCount.x * tileCount.y);
 }
 
 void TilesetGenerator::setupImage()
 {
     tilesetImage.create(tilesetSize.x, tilesetSize.y, backgroundColor.toColor());
+    tilesetPos = sf::Vector2u(0, 0);
 }
 
 bool TilesetGenerator::addImage(const std::string& filename)
@@ -64,9 +67,4 @@ bool TilesetGenerator::addImage(const std::string& filename)
         ++tilesetPos.y;
     }
     return status;
-}
-
-bool TilesetGenerator::saveTileset()
-{
-    return tilesetImage.saveToFile(outputFilename);
 }

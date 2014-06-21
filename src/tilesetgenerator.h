@@ -30,14 +30,12 @@ class TilesetGenerator
         void readConfig();
         void setupImage();
         bool addImage(const std::string& filename);
-        bool saveTileset();
 
         // Objects
+        cfg::File config;
         sf::Image tilesetImage;
 
         // Settings
-        std::string configFilename;
-        std::string outputFilename;
         std::string imageExtension;
         std::string imageDirectory;
         ColorCode backgroundColor;
