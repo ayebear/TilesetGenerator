@@ -11,12 +11,9 @@
 
 /*
 TODO:
-    Make it able to generate any number of tilesets!
-        This way you don't have to re-configure it each time you use it
     If the tile size isn't specified, use the first image as the size
     Make sure start and end are valid
     Add ranges on options in config
-    Implement padding
 */
 
 // This class combines a bunch of image files into a single image file
@@ -27,7 +24,7 @@ class TilesetGenerator
         bool generate();
 
     private:
-        void readConfig();
+        void readConfig(const std::string& sectionName);
         void setupImage();
         bool addImage(const std::string& filename);
 
